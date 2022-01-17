@@ -17,6 +17,7 @@ public class GameController_ArmoredCarMinigame1 : MonoBehaviour
     public bool isWin, isLose, isTutorial2;
     public GameObject tutorial1, tutorial2;
 
+
     private void Awake()
     {
         if (instance == null)

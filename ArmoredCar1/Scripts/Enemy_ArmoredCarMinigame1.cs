@@ -1,4 +1,5 @@
 ﻿using DG.Tweening;
+using Spine.Unity;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,11 +8,28 @@ public class Enemy_ArmoredCarMinigame1 : MonoBehaviour
 {
     public BulletEnemy_ArmoredCarMinigame1 bulletEnemyPrefab;
     public Coroutine shootCoroutine;
+    public SkeletonAnimation anim;
+    [SpineAnimation] public string anim_Idle, anim_Khoc, anim_PhatNo;
 
-    //private void Start()
-    //{
-    //    StartCoroutine(EnemyShooting());
-    //}
+    private void Start()
+    {
+        //anim.state.Complete += AnimComplete;
+        //PlayAnim(anim, anim_Idle, true);
+    }
+
+    private void AnimComplete(Spine.TrackEntry trackEntry)
+    {
+        //if (trackEntry.Animation.Name == anim_DinhDon || trackEntry.Animation.Name == anim_BossDinhDon)
+        //{
+        //    PlayAnim(anim, anim_Idle, true);
+        //}
+    }
+
+    public void PlayAnim(SkeletonAnimation anim, string nameAnim, bool loop)
+    {
+        anim.state.SetAnimation(0, nameAnim, loop);
+    }
+
 
     IEnumerator EnemyShooting()
     {
@@ -37,8 +55,8 @@ public class Enemy_ArmoredCarMinigame1 : MonoBehaviour
                 });
             }
 
-            yield return new WaitForSeconds(Random.Range(3,6));
-            
+            yield return new WaitForSeconds(Random.Range(3, 6));
+
         }
     }
 

@@ -21,6 +21,10 @@ public class Armored_ArmoredMinigame1 : MonoBehaviour
     public float resetBulletProgress;
     public Text txtBullet;
     public int healthPlayer;
+    public Color startColor;
+    public Color endColor;
+    public Coroutine fadeCoroutine;
+    public Vector2 lastPos;
 
 
     private void Start()
@@ -38,26 +42,105 @@ public class Armored_ArmoredMinigame1 : MonoBehaviour
         isResetBullet = false;
         currentPos = transform.position;
         prePos = currentPos;
-        StartCoroutine(UpdatePos());
+        //StartCoroutine(UpdatePos());
         StartCoroutine(ResetPower());
+
     }
 
-    IEnumerator UpdatePos()
+    IEnumerator FadeMeshRender()
     {
-        while (!isPlayingCoroutine)
+        float timeFade = 2;
+        startColor = GetComponent<Renderer>().materials[0].color;
+        endColor = new Color(startColor.a, startColor.g, startColor.b, 0);
+        GetComponent<PolygonCollider2D>().enabled = false;
+        while (timeFade > 0 && !GameController_ArmoredCarMinigame1.instance.isLose)
         {
-            if (isHoldMouse)
+            for (int i = 0; i < GetComponent<Renderer>().materials.Length; i++)
             {
-                currentPos = transform.position;
-                yield return new WaitForSeconds(0.01f);
-                prePos = currentPos;
-                yield return new WaitForSeconds(0.01f);
-                currentPos = transform.position;
+                float lerp = Mathf.PingPong(Time.time, 0.5f) / 0.5f;
+                timeFade -= Time.deltaTime;
+                GetComponent<Renderer>().materials[i].color = Color.Lerp(startColor, endColor, lerp);
+                yield return new WaitForSeconds(0);
             }
-            else
-                yield return new WaitForSeconds(0.1f);
         }
+        for (int i = 0; i < GetComponent<Renderer>().materials.Length; i++)
+        {
+            GetComponent<Renderer>().materials[i].color = startColor;
+        }
+        isHoldMouse = true;
+        yield return new WaitForSeconds(1);
+        GetComponent<PolygonCollider2D>().enabled = true;
+        StopCoroutine(fadeCoroutine);
+
     }
+    //public Coroutine fadeCoroutine;
+    //private MaterialPropertyBlock materialBlock;
+    //[SerializeField] protected MeshRenderer meshRenderer;
+    //[SerializeField] private bool onTest = false;
+
+    // start
+    //{
+    //materialBlock = new MaterialPropertyBlock();
+    //    if(onTest)
+    //    {
+    //        //fadeCoroutine = StartCoroutine(FadeMeshRender());
+
+    //    }
+    //}
+    //IEnumerator FadeMeshRender()
+    //{
+    //    float timeFade = 2;       
+    //    while (timeFade > 0)
+    //    {
+    //        float lerp = Mathf.PingPong(Time.time, 0.5f) / 0.5f;
+    //        SetColorForMaterial(lerp);
+    //        yield return null;
+    //    }
+
+
+    //    StopCoroutine(fadeCoroutine);
+
+    //}
+
+    //private void SetColorForMaterial(float alpha)
+    //{
+    //    materialBlock.SetColor("_Color", new Color(1, 1, 1, alpha));
+    //    meshRenderer.SetPropertyBlock(materialBlock);
+    //}
+
+
+    //IEnumerator UpdatePos()
+    //{
+    //    while (!isPlayingCoroutine)
+    //    {
+    //        if (isHoldMouse)
+    //        {
+    //            currentPos = transform.position;
+    //            yield return new WaitForSeconds(0.01f);
+    //            prePos = currentPos;
+    //            yield return new WaitForSeconds(0.01f);
+    //            currentPos = transform.position;
+    //        }
+    //        else
+    //            yield return new WaitForSeconds(0.1f);
+    //    }
+    //}
+    private void LateUpdate()
+    {
+        if (isHoldMouse)
+        {
+            if (transform.position.x > lastPos.x)
+            {
+                transform.localEulerAngles = new Vector3(0, 0, 0);
+            }
+            if (transform.position.x < lastPos.x)
+            {
+                transform.localEulerAngles = new Vector3(0, 180, 0);
+            }
+        }
+        lastPos = transform.position;
+    }
+
 
     IEnumerator ResetPower()
     {
@@ -128,20 +211,19 @@ public class Armored_ArmoredMinigame1 : MonoBehaviour
                 isHoldMouse = false;
             }
 
-            if (isHoldMouse)
-            {
-                if (currentPos.x > prePos.x)
-                {
-                    //transform.localScale = new Vector2(0.25f, 0.25f);
-                    transform.localEulerAngles = new Vector3(0, 0, 0);
-                }
-                if (currentPos.x < prePos.x)
-                {
-                    //transform.localScale = new Vector2(-0.25f, 0.25f);
-                    transform.localEulerAngles = new Vector3(0, 180, 0);
-                }
-
-            }
+            //if (isHoldMouse)
+            //{
+            //    if (currentPos.x > prePos.x)
+            //    {
+            //        //transform.localScale = new Vector2(0.25f, 0.25f);
+            //        transform.localEulerAngles = new Vector3(0, 0, 0);
+            //    }
+            //    if (currentPos.x < prePos.x)
+            //    {
+            //        //transform.localScale = new Vector2(-0.25f, 0.25f);
+            //        transform.localEulerAngles = new Vector3(0, 180, 0);
+            //    }
+            //}
             if (isResetBullet)
             {
                 resetBulletProgress += Time.deltaTime;
@@ -199,6 +281,7 @@ public class Armored_ArmoredMinigame1 : MonoBehaviour
                 Debug.Log("va cham enemy hoac dan ben trai");
                 if (!GameController_ArmoredCarMinigame1.instance.isWin)
                 {
+                    fadeCoroutine = StartCoroutine(FadeMeshRender());
                     isHoldMouse = false;
                     if (healthPlayer == 1)
                     {
@@ -208,6 +291,7 @@ public class Armored_ArmoredMinigame1 : MonoBehaviour
                         speed = 0;
                         transform.DOMoveX(transform.position.x + 2, 1);
                         Debug.Log("Thua");
+                        StopAllCoroutines();
                     }
                     if (healthPlayer > 1)
                     {
@@ -222,15 +306,14 @@ public class Armored_ArmoredMinigame1 : MonoBehaviour
                                     tmpHeart.GetComponent<SpriteRenderer>().DOFade(1, 0.3f).OnComplete(() =>
                                     {
                                         tmpHeart.SetActive(false);
+
                                     });
                                 });
                             });
                         });
                         speed = 0;
-                        GetComponent<PolygonCollider2D>().enabled = false;
                         transform.DOMoveX(transform.position.x + 2, 1).OnComplete(() =>
                         {
-                            GetComponent<PolygonCollider2D>().enabled = true;
                             speed = 10;
                             currentPos = transform.position;
                             prePos = currentPos;
@@ -243,6 +326,7 @@ public class Armored_ArmoredMinigame1 : MonoBehaviour
                 Debug.Log("va cham enemy hoac dan ben phai");
                 if (!GameController_ArmoredCarMinigame1.instance.isWin)
                 {
+                    fadeCoroutine = StartCoroutine(FadeMeshRender());
                     isHoldMouse = false;
                     if (healthPlayer == 1)
                     {
@@ -252,6 +336,7 @@ public class Armored_ArmoredMinigame1 : MonoBehaviour
                         speed = 0;
                         transform.DOMoveX(transform.position.x - 2, 1);
                         Debug.Log("Thua");
+                        StopAllCoroutines();
                     }
                     if (healthPlayer > 1)
                     {
@@ -266,15 +351,13 @@ public class Armored_ArmoredMinigame1 : MonoBehaviour
                                     tmpHeart.GetComponent<SpriteRenderer>().DOFade(1, 0.3f).OnComplete(() =>
                                     {
                                         tmpHeart.SetActive(false);
+
                                     });
                                 });
                             });
                         });
-                        speed = 0;
-                        GetComponent<PolygonCollider2D>().enabled = false;
                         transform.DOMoveX(transform.position.x - 2, 1).OnComplete(() =>
                         {
-                            GetComponent<PolygonCollider2D>().enabled = true;
                             speed = 10;
                             currentPos = transform.position;
                             prePos = currentPos;
